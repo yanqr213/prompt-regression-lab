@@ -1,0 +1,27 @@
+suite: marketing-regressions
+defaults:
+  vars:
+    brand: Orbit
+    audience: developers
+cases:
+  - id: short-tagline
+    description: "Golden output and text assertions should pass."
+    prompt: "Write a short tagline for {{ brand }} targeting {{ audience }}."
+    actual: "Orbit helps developers ship reliable prompts."
+    golden: "Orbit helps developers ship reliable prompts."
+    assertions:
+      - type: contains
+        value: "developers"
+      - type: regex
+        pattern: "Orbit\\s+helps"
+  - id: json-score
+    description: "JSON path and numeric tolerance checks on structured output."
+    actual: "{\"items\": [{\"score\": 0.91, \"label\": \"pass\"}]}"
+    golden: "{\"items\": [{\"score\": 0.91, \"label\": \"pass\"}]}"
+    assertions:
+      - type: json-path-lite
+        path: "items[0].label"
+        equals: "pass"
+      - type: numeric_tolerance
+        expected: 0.91
+        tolerance: 0.01

@@ -1,0 +1,19 @@
+{
+  "suite": "json-regressions",
+  "cases": [
+    {
+      "id": "greeting",
+      "vars": {
+        "name": "Taylor"
+      },
+      "actual": "Hello Taylor",
+      "golden": "Hello {{ name }}",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "Taylor"
+        }
+      ]
+    }
+  ]
+}

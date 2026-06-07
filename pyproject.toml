@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt-regression-lab"
+version = "0.1.0"
+description = "Offline prompt regression testing CLI for fixtures, assertions, golden outputs, and CI quality gates."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "OpenAI Codex" }
+]
+keywords = ["prompt", "regression", "testing", "cli", "ai"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/yanqr213/prompt-regression-lab"
+Repository = "https://github.com/yanqr213/prompt-regression-lab"
+Issues = "https://github.com/yanqr213/prompt-regression-lab/issues"
+
+[project.scripts]
+prompt-regression-lab = "prompt_regression_lab.cli:main"
+prlab = "prompt_regression_lab.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
