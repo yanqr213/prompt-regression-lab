@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+import xml.etree.ElementTree as ET
 
 from .runner import SuiteExecution
 
@@ -85,3 +86,59 @@ def write_report(path: str | Path, content: str) -> None:
 def write_json_report(path: str | Path, result: SuiteExecution) -> None:
     payload = json.dumps(suite_to_dict(result), indent=2, ensure_ascii=False)
     write_report(path, payload + "\n")
+
+
+def render_junit_report(result: SuiteExecution) -> str:
+    suite = ET.Element(
+        "testsuite",
+        {
+            "name": result.suite_name,
+            "tests": str(result.total),
+            "failures": str(result.failed),
+            "errors": "0",
+            "skipped": "0",
+        },
+    )
+    for case in result.cases:
+        testcase = ET.SubElement(
+            suite,
+            "testcase",
+            {
+                "classname": result.suite_name,
+                "name": case.id,
+            },
+        )
+        if case.errors:
+            message = "; ".join(case.errors)
+            failure = ET.SubElement(testcase, "failure", {"message": message})
+            failure.text = _failure_detail(case)
+        if case.prompt or case.actual:
+            out = ET.SubElement(testcase, "system-out")
+            out.text = _case_system_out(case)
+    return ET.tostring(suite, encoding="unicode") + "\n"
+
+
+def write_junit_report(path: str | Path, result: SuiteExecution) -> None:
+    write_report(path, render_junit_report(result))
+
+
+def _failure_detail(case: Any) -> str:
+    lines = [f"case: {case.id}"]
+    if case.golden_passed is False:
+        lines.append("golden: mismatch")
+    for assertion in case.assertion_results:
+        if not assertion.passed:
+            lines.append(f"assertion {assertion.type}: {assertion.message}")
+    for error in case.errors:
+        lines.append(f"error: {error}")
+    return "\n".join(lines)
+
+
+def _case_system_out(case: Any) -> str:
+    lines = []
+    if case.prompt:
+        lines.extend(["prompt:", case.prompt])
+    lines.extend(["actual:", case.actual])
+    if case.golden is not None:
+        lines.extend(["golden:", case.golden])
+    return "\n".join(lines)

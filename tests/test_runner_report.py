@@ -1,9 +1,10 @@
 import json
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from prompt_regression_lab.report import render_markdown_report, suite_to_dict, write_json_report
+from prompt_regression_lab.report import render_junit_report, render_markdown_report, suite_to_dict, write_json_report
 from prompt_regression_lab.runner import run_suite
 
 
@@ -46,3 +47,13 @@ class RunnerAndReportTests(unittest.TestCase):
             payload = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(payload["passed"], 1)
             self.assertEqual(suite_to_dict(result)["cases"][0]["id"], "a")
+
+    def test_junit_report_marks_failed_cases(self):
+        suite = {"suite": "demo", "cases": [{"id": "a", "actual": "x", "golden": "y"}]}
+        result = run_suite(suite)
+        root = ET.fromstring(render_junit_report(result))
+        self.assertEqual(root.attrib["name"], "demo")
+        self.assertEqual(root.attrib["failures"], "1")
+        failure = root.find("./testcase/failure")
+        self.assertIsNotNone(failure)
+        self.assertIn("Golden output mismatch", failure.attrib["message"])

@@ -20,4 +20,6 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Run sample regression suite
-        run: prlab run examples/sample-suite.yaml --strict
+        run: |
+          prlab run examples/sample-suite.yaml --strict --junit-output prompt-regression-junit.xml
+          test -f prompt-regression-junit.xml

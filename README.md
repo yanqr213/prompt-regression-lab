@@ -19,6 +19,7 @@
   - `json-path-lite`
   - `numeric tolerance`
 - 支持 Markdown 和 JSON 报告
+- 支持 JUnit XML 报告，便于 GitHub Actions、GitLab CI、Jenkins 等系统展示失败用例
 - 支持 `--fail-on-missing-golden`、`--max-failures` 等 CI 质量门参数
 - 仅使用 Python 标准库，无外部运行时依赖
 
@@ -35,6 +36,7 @@ python -m pip install -e .
 ```bash
 prompt-regression-lab --help
 prlab --help
+python -m prompt_regression_lab --help
 ```
 
 ## 快速开始
@@ -75,7 +77,8 @@ prlab run examples/sample-suite.yaml --format markdown --output reports/sample-r
 prlab run examples/sample-suite.yaml ^
   --format both ^
   --output reports/sample-report.md ^
-  --json-output reports/sample-report.json
+  --json-output reports/sample-report.json ^
+  --junit-output reports/sample-report.junit.xml
 ```
 
 ## 测试集格式
@@ -162,6 +165,7 @@ prlab run SUITE_PATH [options]
 - `--format {markdown,json,both}`: 输出格式
 - `--output PATH`: Markdown 报告路径
 - `--json-output PATH`: JSON 报告路径
+- `--junit-output PATH`: JUnit XML 报告路径
 - `--fail-on-missing-golden`: 遇到缺失 golden 直接失败
 - `--max-failures N`: 失败达到 N 后提前停止
 - `--strict`: 等价于开启严格质量门
@@ -188,7 +192,11 @@ prlab run examples/sample-suite.yaml --strict
 你也可以在自己的 prompt 项目中把测试集放进 `prompts/tests/`，然后在 CI 中执行：
 
 ```bash
-prlab run prompts/tests/regressions.yaml --format both --output artifacts/regression.md --json-output artifacts/regression.json
+prlab run prompts/tests/regressions.yaml \
+  --format both \
+  --output artifacts/regression.md \
+  --json-output artifacts/regression.json \
+  --junit-output artifacts/regression.junit.xml
 ```
 
 ## 设计边界与限制
@@ -198,6 +206,12 @@ prlab run prompts/tests/regressions.yaml --format both --output artifacts/regres
 - YAML 解析器是内置的轻量子集实现，适用于常见映射/列表/标量结构；若测试数据包含复杂 YAML 特性，建议使用 JSON
 - `json-path-lite` 只支持点路径和数组索引，不支持完整 JSONPath 语法
 - `numeric_tolerance` 默认从文本中提取第一个数字
+
+## 报告输出
+
+- Markdown：面向 reviewer，包含每个 case 的 prompt、actual、golden、assertions 和 errors。
+- JSON：面向脚本、dashboard 或后续 agent 分析。
+- JUnit XML：面向 CI 测试面板；每个 prompt case 映射为一个 `<testcase>`，失败 case 会写入 `<failure>` 和 `<system-out>`。
 
 ## 开发与测试
 
@@ -256,6 +270,7 @@ Prompt changes often break behavior in subtle ways long before they are noticed 
 - Compare against golden outputs
 - Evaluate `contains`, `regex`, `json-path-lite`, and `numeric_tolerance` assertions
 - Generate Markdown and JSON reports
+- Generate JUnit XML reports for CI test panels
 - Fail CI on regressions, missing golden values, or strict quality-gate settings
 - Run fully offline with Python standard library only
 
@@ -263,12 +278,18 @@ Prompt changes often break behavior in subtle ways long before they are noticed 
 
 ```bash
 python -m pip install -e .
-prlab run examples/sample-suite.yaml --format both --output reports/report.md --json-output reports/report.json
+prlab run examples/sample-suite.yaml \
+  --format both \
+  --output reports/report.md \
+  --json-output reports/report.json \
+  --junit-output reports/report.junit.xml
 ```
 
 ### Intended workflow
 
 Use `prompt-regression-lab` after your own pipeline has already produced candidate outputs. The tool does not call model APIs; it validates prepared outputs and turns regressions into deterministic pass/fail signals for local development and CI.
+
+JUnit XML output maps every prompt case to a testcase so CI systems can display prompt regressions beside ordinary unit tests.
 
 ### Limitations
 

@@ -8,7 +8,7 @@ import sys
 from . import __version__
 from .errors import PromptRegressionLabError
 from .loader import load_suite
-from .report import render_markdown_report, write_json_report, write_report
+from .report import render_markdown_report, write_json_report, write_junit_report, write_report
 from .runner import run_suite
 
 
@@ -22,6 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--format", choices=["markdown", "json", "both"], default="markdown")
     run_parser.add_argument("--output", default="prompt-regression-report.md", help="Markdown report path.")
     run_parser.add_argument("--json-output", default="prompt-regression-report.json", help="JSON report path.")
+    run_parser.add_argument("--junit-output", help="Optional JUnit XML report path for CI systems.")
     run_parser.add_argument("--fail-on-missing-golden", action="store_true")
     run_parser.add_argument("--max-failures", type=int, default=None)
     run_parser.add_argument("--strict", action="store_true", help="Enable strict quality gate behavior.")
@@ -52,6 +53,8 @@ def main(argv: list[str] | None = None) -> int:
         write_report(args.output, render_markdown_report(result))
     if args.format in {"json", "both"}:
         write_json_report(args.json_output, result)
+    if args.junit_output:
+        write_junit_report(args.junit_output, result)
 
     print(f"Suite: {result.suite_name} | passed={result.passed} failed={result.failed} total={result.total}")
     return 0 if result.failed == 0 else 1

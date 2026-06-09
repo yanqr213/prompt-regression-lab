@@ -2,6 +2,7 @@ import io
 import json
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 
@@ -65,3 +66,16 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertTrue(markdown_path.exists())
             self.assertTrue(json_path.exists())
+
+    def test_cli_writes_junit_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            suite_path = Path(tmp) / "suite.json"
+            suite_path.write_text(
+                json.dumps({"suite": "demo", "cases": [{"id": "a", "actual": "x", "golden": "x"}]}),
+                encoding="utf-8",
+            )
+            junit_path = Path(tmp) / "junit.xml"
+            code = main(["run", str(suite_path), "--junit-output", str(junit_path)])
+            self.assertEqual(code, 0)
+            root = ET.fromstring(junit_path.read_text(encoding="utf-8"))
+            self.assertEqual(root.attrib["tests"], "1")
